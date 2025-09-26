@@ -1,0 +1,13 @@
+GET http://localhost:3002/api/notes/
+
+###
+DELETE http://localhost:3002/api/notes/2
+
+###
+POST http://localhost:3002/api/notes
+Content-Type: application/json
+
+{
+  "content": "REST Client is easier to share",
+  "important": true
+}
