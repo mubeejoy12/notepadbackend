@@ -1,16 +1,16 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
+
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // later change to https://yourdomain.com
+  })
+);
+// Enable CORS for all routes
 
-app.get("/", (request, response) => {
-  response.send("<h1>Hello World!</h1>");
-});
-
-const PORT = 3002;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+// In-memory data storage
 let notes = [
   { id: 1, content: "HTML is easy", important: true },
   { id: 2, content: "Browser can execute only JavaScript", important: false },
@@ -21,12 +21,19 @@ let notes = [
   },
 ];
 
+// Root route
+app.get("/", (request, response) => {
+  response.send("<h1>Hello World!</h1>");
+});
+
+// Get all notes
 app.get("/api/notes", (request, response) => {
   response.json(notes);
 });
 
+// Get single note
 app.get("/api/notes/:id", (request, response) => {
-  const id = request.params.id;
+  const id = Number(request.params.id); // FIX: convert string → number
   const note = notes.find((note) => note.id === id);
 
   if (note) {
@@ -36,21 +43,21 @@ app.get("/api/notes/:id", (request, response) => {
   }
 });
 
+// Delete note
 app.delete("/api/notes/:id", (request, response) => {
-  const id = request.params.id;
+  const id = Number(request.params.id); // FIX: convert string → number
   notes = notes.filter((note) => note.id !== id);
 
   response.status(204).end();
 });
 
-// const generateId = () => {
-//   const maxId =
-//     notes.length > 0 ? Math.max(...notes.map((n) => Number(n.id))) : 0;
-//   return String(maxId + 1);
-// };
+// Helper function for ID generation
+const generateId = () => {
+  const maxId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) : 0;
+  return maxId + 1; // no need to stringify, keep IDs as numbers
+};
 
-
-
+// Add new note
 app.post("/api/notes", (request, response) => {
   const body = request.body;
 
@@ -63,9 +70,16 @@ app.post("/api/notes", (request, response) => {
   const note = {
     content: body.content,
     important: body.important || false,
-    id: String(notes.length + 1),
+    id: generateId(),
   };
 
   notes = notes.concat(note);
+
   response.json(note);
+});
+
+// Start server
+const PORT = process.env.PORT || 3002;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
